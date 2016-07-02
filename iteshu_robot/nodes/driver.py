@@ -11,7 +11,7 @@ from visualization_msgs.msg._MarkerArray import MarkerArray
 import tf
 import sys, select, termios, tty
 
-class DriverCoyote:
+class Driver:
     """This class performs the management of sensors and actuators of the robot
     """
     def __init__(self):
@@ -64,8 +64,8 @@ class DriverCoyote:
         return filename
 
 if __name__ == "__main__":
-    rospy.init_node('driver_coyote')
+    rospy.init_node('driver')
     try:
-        DriverCoyote()
+        Driver()
     except:
         pass
