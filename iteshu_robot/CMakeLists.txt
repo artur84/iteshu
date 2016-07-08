@@ -9,13 +9,11 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   message_generation
   move_base_msgs
-  openni_launch
   roscpp
   roslib
   rospy
   std_msgs
   tf
-  turtlebot_teleop
 )
 
 ## System dependencies are found with CMake's conventions
