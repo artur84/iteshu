@@ -9,6 +9,8 @@
 <path>/usr/local/lib/python2.7/dist-packages/rosinstall-0.7.5-py2.7.egg</path>
 <path>/usr/local/lib/python2.7/dist-packages/vcstools-0.1.36-py2.7.egg</path>
 <path>/usr/local/lib/python2.7/dist-packages/rosdep-0.11.2-py2.7.egg</path>
+<path>/usr/local/lib/python2.7/dist-packages/catkinize-0.1-py2.7.egg</path>
+<path>/home/arturo/catkin_ws/devel/lib/python2.7/dist-packages</path>
 <path>/opt/ros/indigo/lib/python2.7/dist-packages</path>
 <path>/usr/lib/python2.7</path>
 <path>/usr/lib/python2.7/plat-x86_64-linux-gnu</path>

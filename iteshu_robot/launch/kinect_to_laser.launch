@@ -1,15 +1,10 @@
 <!-- Use this launch file to start a demo with all necessary nodes to convert kinect point clouds to laser scans to be used with the navigation stack -->
 
 <launch>
-
-    <arg name="camera" default="camera" />
-
     <!-- Launch kinect -->
     <include file="$(find openni_launch)/launch/openni.launch"/>
-
     <!-- run image to laser transformer -->
     <node name="depthimage_to_laserscan" pkg="depthimage_to_laserscan" type="depthimage_to_laserscan" > 
         <remap from="image" to="/camera/depth/image_raw"/>
     </node>
-
 </launch>
