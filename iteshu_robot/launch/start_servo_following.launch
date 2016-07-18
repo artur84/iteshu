@@ -1,0 +1,14 @@
+<!-- Test the kinect servo follower -->
+
+<launch>
+	
+	<node pkg="iteshu_robot" type="servo_following.py" name="servofollowing" output="screen" /> 
+  	
+	
+	<!--Some example transformations Used just fort testing without the real kinect-->
+	<!-- static_transform_publisher x y z yaw pitch roll frame_id child_frame_id -->	
+	<node pkg="tf" type="static_transform_publisher" name="base_to_kinect"
+    args="2 2 -2 0 0 0 1 /openni_depth_frame /torso_1 50" />
+	
+
+</launch>
