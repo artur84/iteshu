@@ -130,8 +130,8 @@ def getKey():
     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
     return key
 
-speed = 0.1
-turn = 0.4
+speed = 2.0 
+turn = 15.0
 
 def vels(speed, turn):
     return "currently:\tspeed %s\tturn %s " % (speed, turn)
