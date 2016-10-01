@@ -13,7 +13,7 @@ import math
 import tf
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import PoseStamped
-from std_msgs.msg import Float64
+from std_msgs.msg import UInt16
 from copy import deepcopy 
 import numpy as np
 
@@ -24,43 +24,33 @@ class TrackedPerson():
         
         """Members 
         """ 
-        self.__last_angles_from_kinect = [0,0]  #Contains pitch and yaw angles
-        self.__current_angles_from_kinect = [1.0,1.0]# Contains pitch and yaw angles
+        self.last_angle_from_kinect = 0
+        self.current_angle_from_kinect = 1
+        self.person_number = 1 #Number of the user being tracked
         """ Publishers
         """
-        self.pitch_pub = rospy.Publisher( "pitch", Float64, queue_size=2 )
-        self.yaw_pub = rospy.Publisher( "yaw", Float64, queue_size=2 )
         
         """ Subscribers
         """
         self.__listener = tf.TransformListener() #NOTE THIS: the listener should be declared in the class
 
-    def __compute_angles_from_kinect_(self):
-        """ Gets the position (angles) of the tracked user with respect to the kinect """
+    def get_angle_from_kinect(self):
+        """ Get the position (angle) of the tracked user with respect to the kinect """
         try:
             now = rospy.Time(0)
+            
             #wait transformation for 500 msec = 500 000 000 nsec )
             #It caused the node to die
             #self.__listener.waitForTransform( '/new_ref', '/head_origin', now, rospy.Duration( 1, 500000000 )) 
-            (trans, rot) = self.__listener.lookupTransform( 'openni_depth_frame', 'torso_1',  now)
+            (trans, rot) = self.__listener.lookupTransform( 'openni_depth_frame', 'torso_'+str(self.person_number),  now)
         except ( tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException ):
             pass
-        self._last_angles_from_kinect = self.__current_angles_from_kinect
-        yaw = np.rad2deg(np.arctan2( trans[1] , trans[0] )) #Angle of the user with respect to the kinect
-        pitch = np.rad2deg(np.arctan2( trans[2] , trans[0] )) #Angle of the user with respect to the kinect
-        self.__current_angles_from_kinect = [pitch, yaw]
+        self.last_angle_from_kinect = self.current_angle_from_kinect
+        self.current_angle_from_kinect = np.rad2deg(np.arctan2( trans[1] , trans[0] )) #Angle of the user with respect to the kinect
+        return self.current_angle_from_kinect
     
-    def get_angles_from_kinect(self):
-        """ It returns what was computed using __compute_angles_from_kinect_
-            
-            returns: [pitch, yaw]
-        """
-        self.__compute_angles_from_kinect_()
-        return self.__current_angles_from_kinect
-    
-   
     def loop_exists(self):
-        if self.__current_angles_from_kinect == self._last_angles_from_kinect:
+        if self.current_angle_from_kinect == self.last_angle_from_kinect:
             return True
         else:
             return False
@@ -70,12 +60,7 @@ class TrackedPerson():
 
 
 class Servo():
-    def __init__( self, name='servo' ):
-        """ Class servo
-        
-            name: String the name of this servo (To be used to rename topic names)
-        """
-        
+    def __init__( self ):
         """ Constants
         """
         self.C_TIME_FOR_ANGLE_INCREMENT = 0.15 #time in seconds
@@ -91,16 +76,20 @@ class Servo():
         self.Kd = 0.025
         """Members 
         """ 
-        self.angle = Float64() #Values 0 "right"  - 180 "left", The angle where we want the serve moves to 
+        self.angle = UInt16() #Values 0 "right"  - 180 "left", The angle where we want the serve moves to 
         """Publishers
         """
-        self.angle_pub = rospy.Publisher( name, Float64, queue_size=10 ) #Should have values between 0 and 180
-                
+        self.angle_pub = rospy.Publisher( 'arduino/servo', UInt16, queue_size=10 ) #Should have values between 0 and 180
         self.servo_tf_br = tf.TransformBroadcaster()
         """Subscribers
         """
         
     def move_angle(self, angle):
+#        if (angle > self.C_ANGLE_INCREMENT):
+#                self.move_left()
+#        if (angle < -self.C_ANGLE_INCREMENT):
+#                self.move_right()
+#        rospy.sleep(1)
         if (np.abs(angle) > self.C_ANGLE_INCREMENT):
             next_angle = self.angle + self.C_ANGLE_INCREMENT
             if next_angle >= 0 and next_angle <= 180:
@@ -108,6 +97,7 @@ class Servo():
 #                    self.move_left()
 #                else:
 #                    self.move_right()
+#
 #                rospy.sleep(rospy.Duration.from_sec(self.C_TIME_FOR_ANGLE_INCREMENT))
                 self.pid_control(angle)
             else:
@@ -148,13 +138,10 @@ class ServoFollowing():
         
         """Members 
         """ 
-        #self.servo_pitch = Servo('pitch')
-        #self.servo_yaw = Servo('yaw')
-        self.yaw = Float64()
-        self.pitch = Float64()
+        self.servo = Servo()
         self.user = TrackedPerson()
-
-        
+        """ Publishers
+        """
  
         rospy.on_shutdown( self.cleanup )
         self.cleanup()
@@ -162,33 +149,28 @@ class ServoFollowing():
         
         while not rospy.is_shutdown():
             try:
-                [pitch, yaw] = self.user.get_angles_from_kinect()  
-                self.yaw.data=yaw
-                self.pitch.data=pitch
-                print "Angle between tracked person and kinect:"   
-                print "pitch:"               
-                print pitch
-                print "yaw:" 
-                print yaw
+                angle = self.user.get_angle_from_kinect()  
+                print "Angle between tracked person and kinect:"                
+                print angle
             except:
-                print "Cannot find the tracked person"
-                rospy.sleep(1)
+                print "Cannot find the tracked person "+str(self.user.person_number)
+                #If there i no user (i) look for another user.
+                if self.user.person_number<15: #15 is the maximum number of users generated by the kinect tracker
+                    self.user.person_number+=1
+                else:
+                    self.user.person_number=1
+                rospy.sleep(0.1)
                 continue
             if self.user.loop_exists():
                 print "Loop Exists"
                 rospy.sleep(1)
-            #self.servo.move_angle(angle)
-            
-            #Publish ROS messages
-            print "Publishing"
-            self.user.yaw_pub.publish(self.yaw)
-            self.user.pitch_pub.publish(self.pitch)
-            print "Sleeping"
+                continue
+            self.servo.move_angle(angle)
             r.sleep()
             
     def cleanup(self):
-        #self.servo.go_home()
-        pass
+        self.servo.go_home()
+    
         
     
 
