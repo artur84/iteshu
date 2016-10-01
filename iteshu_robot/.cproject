@@ -479,6 +479,7 @@
 			</scannerInfoProvider>
 		</profile>
 	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="org.eclipse.cdt.core.pathentry">
 		<pathentry kind="src" path="[Source directory]"/>
 		<pathentry excluding="[Source directory]/|**/CMakeFiles/" kind="out" path=""/>
@@ -489,6 +490,6 @@
 		<pathentry include="/usr/src/gtest/include" kind="inc" path="" system="true"/>
 		<pathentry include="/usr/src/gtest" kind="inc" path="" system="true"/>
 		<pathentry kind="src" path="nodes"/>
+		<pathentry kind="src" path="sounds"/>
 	</storageModule>
-	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 </cproject>
