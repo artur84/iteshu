@@ -67,7 +67,7 @@ class Servo():
         self.previous_angle_error = 0.0
         self.integral_error = 0
         self.derivative = 0
-        self.Kp = 0.3  #Best tuned params I have found are kp 0.13, ki 0.17, and kd 0.025
+        self.Kp = 0.2  #Best tuned params I have found are kp 0.13, ki 0.17, and kd 0.025
         self.Ki = 0.01
         self.Kd = 0.0
         """Members 
@@ -155,7 +155,7 @@ class ServoFollowing():
                 print "Cannot find the tracked person "+str(self.user.person_number)
                 #If there i no user (i) look for another user.
                 self.look_for_another_user()
-                rospy.sleep(1)
+                rospy.sleep(0.1)#time in seconds
                 continue
             if self.user.loop_exists():
                 print "Loop Exists on user "+str(self.user.person_number)
@@ -163,7 +163,7 @@ class ServoFollowing():
                 #If there i no user (i) look for another user.
                 self.look_for_another_user()
                 print "I will try with user "+str(self.user.person_number)
-                rospy.sleep(1)
+                rospy.sleep(2)
                 #continue
             self.servo.move_angle(angle)
             r.sleep()
