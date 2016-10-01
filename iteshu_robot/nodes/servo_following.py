@@ -38,11 +38,7 @@ class TrackedPerson():
         """ Get the position (angle) of the tracked user with respect to the kinect """
         try:
             now = rospy.Time(0)
-            
-            #wait transformation for 500 msec = 500 000 000 nsec )
-            #It caused the node to die
-            #self.__listener.waitForTransform( '/new_ref', '/head_origin', now, rospy.Duration( 1, 500000000 )) 
-            (trans, rot) = self.__listener.lookupTransform( 'openni_depth_frame', 'torso_'+str(self.person_number),  now)
+            (trans, rot) = self.__listener.lookupTransform( 'openni_depth_frame', 'head_'+str(self.person_number),  now)
         except ( tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException ):
             pass
         self.last_angle_from_kinect = self.current_angle_from_kinect
@@ -64,18 +60,19 @@ class Servo():
         """ Constants
         """
         self.C_TIME_FOR_ANGLE_INCREMENT = 0.15 #time in seconds
-        self.C_ANGLE_INCREMENT= 3 #Value of desired angle steps to move the servo (It is related to the resolution of the servo) mine is 10 degrees.
+        self.C_ANGLE_INCREMENT= 1 #Value of desired angle steps to move the servo (It is related to the resolution of the servo) mine is 10 degrees.
         self.C_INIT_ANGLE = 90 #Servo starting position 90 -> to the front, 0->right, 180 left.
         """For PID controller """
         self.dt = 0.1 #Period of time to change the min resolution angle of the servo
         self.previous_angle_error = 0.0
-        self.integral = 0
+        self.integral_error = 0
         self.derivative = 0
         self.Kp = 0.13  #Best tuned params I have found are kp 0.13, ki 0.17, and kd 0.025
         self.Ki = 0.17
         self.Kd = 0.025
         """Members 
         """ 
+        self.cant_move_more_flag=0
         self.angle = UInt16() #Values 0 "right"  - 180 "left", The angle where we want the serve moves to 
         """Publishers
         """
@@ -85,34 +82,33 @@ class Servo():
         """
         
     def move_angle(self, angle):
-#        if (angle > self.C_ANGLE_INCREMENT):
-#                self.move_left()
-#        if (angle < -self.C_ANGLE_INCREMENT):
-#                self.move_right()
-#        rospy.sleep(1)
-        if (np.abs(angle) > self.C_ANGLE_INCREMENT):
-            next_angle = self.angle + self.C_ANGLE_INCREMENT
-            if next_angle >= 0 and next_angle <= 180:
-#                if angle > 0:
-#                    self.move_left()
-#                else:
-#                    self.move_right()
-#
-#                rospy.sleep(rospy.Duration.from_sec(self.C_TIME_FOR_ANGLE_INCREMENT))
-                self.pid_control(angle)
-            else:
-                rospy.loginfo("Servo can't move more")
+        """ angle: Is the angle between the tracked person and kinect
+        """
+        print angle
+        self.pid_control(angle)
+            
     
     def pid_control(self, angle_error):
         self.angle_error = angle_error
         rospy.sleep(rospy.Duration.from_sec(self.dt))
-        self.integral = self.integral + (self.angle_error*self.dt)
-        self.derivative = (self.angle_error - self.previous_angle_error)/self.dt
-        self.pid_output = (self.Kp*self.angle_error) + (self.Ki*self.integral) + (self.Kd*self.derivative)
+        self.integral_error = self.integral_error + (self.angle_error*self.dt)
+        self.derivative_error = (self.angle_error - self.previous_angle_error)/self.dt
+        self.pid_output = (self.Kp*self.angle_error) + (self.Ki*self.integral_error) + (self.Kd*self.derivative_error)
         self.previous_angle_error = self.angle_error
         self.angle += self.pid_output
-        self.angle_pub.publish(self.angle)
-        #TODO: remap this output to 0-180 scale
+        
+        if self.angle >= 0 and self.angle <= 180:
+            self.angle_pub.publish(self.angle)  
+        else:
+            self.cant_move_more_flag=1
+            rospy.loginfo("Servo can't move more")
+            self.previous_angle_error=0
+            self.integral_error=0
+            self.derivative_error=0
+            self.angle_error=0
+            self.go_home()
+         
+
         
         
         
@@ -127,6 +123,7 @@ class Servo():
 
 
     def go_home(self):
+        self.cant_move_more_flag=0
         self.angle_pub.publish(self.C_INIT_ANGLE)
         self.angle = self.C_INIT_ANGLE
         
@@ -144,7 +141,9 @@ class ServoFollowing():
         """
  
         rospy.on_shutdown( self.cleanup )
+        
         self.cleanup()
+        
         r = rospy.Rate( 10.0 )
         
         while not rospy.is_shutdown():
@@ -162,13 +161,20 @@ class ServoFollowing():
                 rospy.sleep(0.1)
                 continue
             if self.user.loop_exists():
-                print "Loop Exists"
+                print "Loop Exists on user "+str(self.user.person_number)
+                #If there i no user (i) look for another user.
+                if self.user.person_number<15: #15 is the maximum number of users generated by the kinect tracker
+                    self.user.person_number+=1
+                else:
+                    self.user.person_number=1
+                print "I will try with user "+str(self.user.person_number)
                 rospy.sleep(1)
-                continue
+                #continue
             self.servo.move_angle(angle)
             r.sleep()
             
     def cleanup(self):
+        print 'Go home'
         self.servo.go_home()
     
         
