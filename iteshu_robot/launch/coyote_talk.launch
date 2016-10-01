@@ -1,0 +1,11 @@
+<!-- This launches the coyote_talk.py node to talk back what the
+recognizer understands for feedback purposes-->
+<!-- author: Arturo Escobedo -->
+
+<launch>
+	<node pkg="sound_play" type="soundplay_node.py" name="coyote_play_voice" output="screen"/>
+    <node pkg="iteshu_robot" type="coyote_talk.py" name="coyote_talk" output="screen">
+    	<param name="voice" value="voice_kal_diphone"/><!-- voice_don_diphone -->
+        <param name="wavepath" value="$(find wheelchairint)/sounds"/>
+   	</node>
+</launch>
