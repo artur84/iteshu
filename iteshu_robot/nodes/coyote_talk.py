@@ -11,8 +11,8 @@ class WheelchairTalk:
         rospy.on_shutdown(self.cleanup)
         time_since_last_message=0
         time_since_last_sound=0
-
-        self.voice = rospy.get_param("~voice", "voice_kal_diphone")#voice_don_diphone, voice_kal_diphone
+        #voice_*_diphone, * = kal, el (spanish), rab (british)
+        self.voice = rospy.get_param("~voice", "voice_el_diphone")
         self.wavepath = rospy.get_param("~wavepath", "")
         self.command_to_phrase = COMMAND_TO_PHRASE  # this is deffined in wheelchairint/keywords_tocommand.py
         # Create the sound client object
@@ -23,9 +23,9 @@ class WheelchairTalk:
         rospy.sleep(1)
         self.soundhandle.playWave(self.wavepath + "/R2D2.wav")
         rospy.sleep(5)
-        self.soundhandle.say("Hello", self.voice)
+        self.soundhandle.say("Hola", self.voice)
         rospy.sleep(2)
-        self.soundhandle.say("My name is coyote robot", self.voice)
+        self.soundhandle.say("Mi nombre es robot coyote", self.voice)
         rospy.sleep(5)
         rospy.loginfo("Say a command...")
 
@@ -45,9 +45,9 @@ class WheelchairTalk:
             if (time_since_last_message >= 12):
                 self.soundhandle.stopAll()
                 rospy.sleep(1)
-                self.soundhandle.say("Hello", self.voice)
+                self.soundhandle.say("Hola", self.voice)
                 rospy.sleep(2)
-                self.soundhandle.say("My name is coyote robot", self.voice)
+                self.soundhandle.say("Mi nombre es robot coyote", self.voice)
                 rospy.sleep(5)
                 time_since_last_message=0
                 
@@ -66,8 +66,8 @@ class WheelchairTalk:
 
 
     def cleanup(self):
-        self.soundhandle.say("Good bye", self.voice)
-        rospy.sleep(3)
+        self.soundhandle.say("Adios", self.voice)
+        rospy.sleep(4)
 
 if __name__ == "__main__":
     rospy.init_node('wheelchair_talk')
