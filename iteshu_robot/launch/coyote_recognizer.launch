@@ -1,0 +1,8 @@
+<!-- This launches the voice recognition system of coyote robot -->
+<!-- author: Arturo -->
+
+<launch>
+   	<!-- if we want to use google recognizer -->
+	<node  pkg="iteshu_robot" type="coyote_recognizer.py" name="coyote_recognizer" output="screen" respawn="True">
+	</node>
+</launch>
