@@ -35,19 +35,22 @@ class WheelchairTalk:
         while not rospy.is_shutdown():
 #            rospy.loginfo("wheelchair talk is running correctly.")
             rospy.sleep(1)
-            if (time_since_last_sound >= 5):
+            if (time_since_last_sound >= 40):
                 self.soundhandle.stopAll()
                 rospy.sleep(1)
-                self.soundhandle.playWave(self.wavepath + "/R2D2.wav")
-                rospy.sleep(5)
+                self.soundhandle.say("hola", self.voice)
+                rospy.sleep(1)
                 time_since_last_sound=0
+                
             
-            if (time_since_last_message >= 12):
+            if (time_since_last_message >= 25):
                 self.soundhandle.stopAll()
                 rospy.sleep(1)
-                self.soundhandle.say("Hola", self.voice)
+                self.soundhandle.say("Buenas tardes", self.voice)
                 rospy.sleep(2)
-                self.soundhandle.say("Mi nombre es robot coyote", self.voice)
+                self.soundhandle.say("Bienvenidos", self.voice)
+                rospy.sleep(3)
+                self.soundhandle.say("Los puedo seguir", self.voice)
                 rospy.sleep(5)
                 time_since_last_message=0
                 
@@ -57,12 +60,15 @@ class WheelchairTalk:
 
     def rec_out_callback(self, msg):
         # Print the recognized words on the screen
+        self.soundhandle.stopAll()
+        rospy.sleep(1)
         self.current_command = msg.data
         # Speak-out the recognized words.
         try:  # If the command was recognized
-            self.soundhandle.say(self.command_to_phrase[self.current_command], self.voice)
+            self.soundhandle.say(self.current_command, self.voice)
+            rospy.sleep(1)
         except:
-            self.soundhandle.say("repeat", self.voice)
+            self.soundhandle.say("No entiendo", self.voice)
 
 
     def cleanup(self):
