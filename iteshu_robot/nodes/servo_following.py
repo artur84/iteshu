@@ -43,7 +43,12 @@ class TrackedPerson():
         """ Get the position (angle) of the tracked user with respect to the kinect """
         self.current_name = deepcopy(self.available_list[0]) #Takes the first user in the list
         #print self.current_name
-        try:
+        try:#Check if the desired tf is active
+            self.__listener.waitForTransform('openni_depth_frame', self.current_name,  rospy.Time.now(), rospy.Duration(0.05))
+        except:
+            raise
+        
+        try:#Compute the desired tf
             now = rospy.Time(0)
             (trans, rot) = self.__listener.lookupTransform( 'openni_depth_frame', self.current_name,  now)  
         except ( tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException ):
@@ -53,28 +58,16 @@ class TrackedPerson():
         self.last_angle_from_kinect = self.current_angle_from_kinect
         self.current_angle_from_kinect = np.rad2deg(np.arctan2( trans[1] , trans[0] )) #Angle of the user with respect to the kinect
         return self.current_angle_from_kinect
-    
-    def user_frame_is_ok(self):
-        """ Get the position (angle) of the tracked user with respect to the kinect """
-        ok_flag=0 #0 means not ok
-        self.current_name = self.frame_root+str(self.number)
-        try:
-            now = rospy.Time(0)
-            (trans, rot) = self.__listener.lookupTransform( 'openni_depth_frame', self.current_name,  now)
-            ok_flag=1
-        except ( tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException ):
-            ok_flag=0
-            pass
        
     def get_available_list(self):
         """ Gets the list of all available frames 
         """
         self.available_list=[]
-        for n in range(15):
+        for n in range(8):
             name = self.frame_root+str(n)
             if self.__listener.frameExists(name):
                 try:
-                    self.__listener.waitForTransform('openni_depth_frame', name,  rospy.Time.now(), rospy.Duration(0.1))
+                    self.__listener.waitForTransform('openni_depth_frame', name,  rospy.Time.now(), rospy.Duration(0.05))
                     self.available_list.append(name)
                 except:
                     continue
@@ -103,19 +96,21 @@ class Servo():
         """
         self.C_TIME_FOR_ANGLE_INCREMENT = 0.15 #time in seconds
         self.C_ANGLE_INCREMENT= 1 #Value of desired angle steps to move the servo (It is related to the resolution of the servo) mine is 10 degrees.
-        self.C_INIT_ANGLE = 90 #Servo starting position 90 -> to the front, 0->right, 180 left.
+        self.C_INIT_ANGLE = 110 #!!!!!!!IT MUST BE EQUAL TO THE ONE OF THE ARDUINO!!!!!!!!!
         """For PID controller """
         self.dt = 0.1 #Period of time to change the min resolution angle of the servo
-        self.previous_angle_error = 0.0
-        self.integral_error = 0
-        self.derivative = 0
-        self.Kp = 0.2  #Best tuned params I have found are kp 0.13, ki 0.17, and kd 0.025
+        self.previous_p_error = 0.0
+        self.p_error=0.0
+        self.integral_error = 0.0
+        self.derivative_error = 0.0
+        self.Kp = 0.3  #Best tuned params I have found are kp 0.13, ki 0.17, and kd 0.025
         self.Ki = 0.01
         self.Kd = 0.0
         """Members 
         """ 
         self.cant_move_more_flag=0
-        self.angle = UInt16() #Values 0 "right"  - 180 "left", The angle where we want the serve moves to 
+        self.ros_angle = UInt16() #It will be initialized in go_home Values 0 "right"  - 180 "left", The angle where we want the serve moves to 
+        self.angle=self.C_INIT_ANGLE #It will be initialized in go_home Values 0 "right
         """Publishers
         """
         self.angle_pub = rospy.Publisher( 'arduino/servo', UInt16, queue_size=10 ) #Should have values between 0 and 180
@@ -131,43 +126,32 @@ class Servo():
             
     
     def pid_control(self, angle_error):
-        self.angle_error = angle_error
+        self.p_error = angle_error
         rospy.sleep(rospy.Duration.from_sec(self.dt))
-        self.integral_error = self.integral_error + (self.angle_error*self.dt)
-        self.derivative_error = (self.angle_error - self.previous_angle_error)/self.dt
-        self.pid_output = (self.Kp*self.angle_error) + (self.Ki*self.integral_error) + (self.Kd*self.derivative_error)
-        self.previous_angle_error = self.angle_error
+        self.integral_error = self.integral_error + (self.p_error*self.dt)
+        self.derivative_error = (self.p_error - self.previous_p_error)/self.dt
+        self.pid_output = (self.Kp*self.p_error) + (self.Ki*self.integral_error) + (self.Kd*self.derivative_error)
+        self.previous_p_error = self.p_error
         self.angle += self.pid_output
         
         if self.angle >= 0 and self.angle <= 180:
-            self.angle_pub.publish(self.angle)  
+            self.ros_angle.data=self.angle
+            print self.angle
+            self.angle_pub.publish(self.ros_angle)  
         else:
             self.cant_move_more_flag=1
             rospy.loginfo("Servo can't move more")
-            self.previous_angle_error=0
+            self.previous_p_error=0
             self.integral_error=0
             self.derivative_error=0
-            self.angle_error=0
+            self.p_error=0
             self.go_home()
-         
-
-        
-        
-        
-    def move_right(self):
-            self.angle -= self.C_ANGLE_INCREMENT
-            self.angle_pub.publish(self.angle)
-
-    
-    def move_left(self):   
-            self.angle += self.C_ANGLE_INCREMENT
-            self.angle_pub.publish(self.angle)
-
 
     def go_home(self):
+        self.ros_angle.data=self.C_INIT_ANGLE
+        self.angle=self.C_INIT_ANGLE
         self.cant_move_more_flag=0
-        self.angle_pub.publish(self.C_INIT_ANGLE)
-        self.angle = self.C_INIT_ANGLE
+        self.angle_pub.publish(self.ros_angle)
         
         
 class ServoFollowing():
@@ -181,6 +165,7 @@ class ServoFollowing():
         self.user = TrackedPerson()
         self.current_amount_of_users=0
         self.last_amount_of_users=0
+        self.first_loop_flag=1
         """ Publishers
         """
  
@@ -206,27 +191,18 @@ class ServoFollowing():
                 print self.user.available_list
             else:
                 pass
-            #### Track users
+            #### Track users only if there are more than 0
             if self.current_amount_of_users>0: #There are available users
                 try:
-                    angle = self.user.get_angle_from_kinect()  
-                    #print "Angle between tracked person"+str(self.user.number)+ " and kinect:"                
-                    #print angle    
+                    angle = self.user.get_angle_from_kinect()      
                 except:
-                    #print "Cannot find the tracked person "+str(self.user.number)
-                    #If there i no user (i) look for another user.
-                    self.user.look_for_another_user()
-                    #rospy.sleep(0.1)#time in seconds
                     continue
-                if self.user.loop_exists():
-                    #print "Loop Exists on user "+str(self.user.number)
-                    self.servo.go_home()
-                    #If there i no user (i) look for another user.
-                    self.user.look_for_another_user()
-                    #print "I will try with user "+str(self.user.number)
-                    rospy.sleep(0.2)
-                    continue
-                self.servo.move_angle(angle)
+                if self.first_loop_flag:
+                    self.servo.move_angle(0)
+                    self.first_loop_flag=0
+                else:
+                    pass
+                    self.servo.move_angle(angle)
             else:
                 pass
                 #print "There are no users"
