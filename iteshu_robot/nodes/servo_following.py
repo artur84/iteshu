@@ -31,6 +31,7 @@ class TrackedPerson():
         self.frame_root="head_" #frame root name beeing tracked it can be torso_, head_ etc.
         self.current_name=self.frame_root+str(self.number) #Frame beeing tracked root+number
         self.last_name=self.frame_root+str(self.number)
+        self.available_list=[] #The list containing all the available users in the scene 
         """ Publishers
         """
         
@@ -40,9 +41,9 @@ class TrackedPerson():
 
     def get_angle_from_kinect(self):
         """ Get the position (angle) of the tracked user with respect to the kinect """
-        
+        self.current_name = deepcopy(self.available_list[0]) #Takes the first user in the list
+        #print self.current_name
         try:
-            self.current_name = self.frame_root+str(self.number)
             now = rospy.Time(0)
             (trans, rot) = self.__listener.lookupTransform( 'openni_depth_frame', self.current_name,  now)  
         except ( tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException ):
@@ -65,7 +66,21 @@ class TrackedPerson():
             ok_flag=0
             pass
        
-    
+    def get_available_list(self):
+        """ Gets the list of all available frames 
+        """
+        self.available_list=[]
+        for n in range(15):
+            name = self.frame_root+str(n)
+            if self.__listener.frameExists(name):
+                try:
+                    self.__listener.waitForTransform('openni_depth_frame', name,  rospy.Time.now(), rospy.Duration(0.1))
+                    self.available_list.append(name)
+                except:
+                    continue
+                
+        return self.available_list
+            
     def loop_exists(self):
         if self.current_angle_from_kinect == self.last_angle_from_kinect:
             return True
@@ -111,7 +126,7 @@ class Servo():
     def move_angle(self, angle):
         """ angle: Is the angle between the tracked person and kinect
         """
-        print angle
+        #print angle
         self.pid_control(angle)
             
     
@@ -164,6 +179,8 @@ class ServoFollowing():
         """ 
         self.servo = Servo()
         self.user = TrackedPerson()
+        self.current_amount_of_users=0
+        self.last_amount_of_users=0
         """ Publishers
         """
  
@@ -172,29 +189,49 @@ class ServoFollowing():
         self.cleanup()
         
         r = rospy.Rate( 10.0 )
-        
+        list=[]
         while not rospy.is_shutdown():
-            print self.user.current_name
-            print self.user.last_name
-            try:
-                angle = self.user.get_angle_from_kinect()  
-                print "Angle between tracked person"+str(self.user.number)+ " and kinect:"                
-                print angle
-            except:
-                print "Cannot find the tracked person "+str(self.user.number)
-                #If there i no user (i) look for another user.
-                self.user.look_for_another_user()
-                #rospy.sleep(0.1)#time in seconds
-                continue
-            if self.user.loop_exists():
-                print "Loop Exists on user "+str(self.user.number)
-                self.servo.go_home()
-                #If there i no user (i) look for another user.
-                self.user.look_for_another_user()
-                print "I will try with user "+str(self.user.number)
-                rospy.sleep(0.2)
-                continue
-            self.servo.move_angle(angle)
+            #print self.user.current_name
+            #print self.user.last_name
+            self.user.get_available_list()
+            self.current_amount_of_users= len(self.user.available_list)
+            ####Say hello when new user enters
+            if self.current_amount_of_users>self.last_amount_of_users:
+                print "New user entered"
+                print "current users:"
+                print self.user.available_list
+            elif self.current_amount_of_users <self.last_amount_of_users:
+                print "A user got out"
+                print "current users:"
+                print self.user.available_list
+            else:
+                pass
+            #### Track users
+            if self.current_amount_of_users>0: #There are available users
+                try:
+                    angle = self.user.get_angle_from_kinect()  
+                    #print "Angle between tracked person"+str(self.user.number)+ " and kinect:"                
+                    #print angle    
+                except:
+                    #print "Cannot find the tracked person "+str(self.user.number)
+                    #If there i no user (i) look for another user.
+                    self.user.look_for_another_user()
+                    #rospy.sleep(0.1)#time in seconds
+                    continue
+                if self.user.loop_exists():
+                    #print "Loop Exists on user "+str(self.user.number)
+                    self.servo.go_home()
+                    #If there i no user (i) look for another user.
+                    self.user.look_for_another_user()
+                    #print "I will try with user "+str(self.user.number)
+                    rospy.sleep(0.2)
+                    continue
+                self.servo.move_angle(angle)
+            else:
+                pass
+                #print "There are no users"
+                
+            self.last_amount_of_users=deepcopy(self.current_amount_of_users)
             r.sleep()
      
         
