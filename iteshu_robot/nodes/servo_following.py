@@ -43,10 +43,10 @@ class TrackedPerson():
         """ Get the position (angle) of the tracked user with respect to the kinect """
         self.current_name = deepcopy(self.available_list[0]) #Takes the first user in the list
         #print self.current_name
-        try:#Check if the desired tf is active
-            self.__listener.waitForTransform('openni_depth_frame', self.current_name,  rospy.Time.now(), rospy.Duration(0.05))
-        except:
-            raise
+#         try:#Check if the desired tf is active
+#             self.__listener.waitForTransform('openni_depth_frame', self.current_name,  rospy.Time.now(), rospy.Duration(0.05))
+#         except:
+#             raise
         
         try:#Compute the desired tf
             now = rospy.Time(0)
@@ -103,8 +103,8 @@ class Servo():
         self.p_error=0.0
         self.integral_error = 0.0
         self.derivative_error = 0.0
-        self.Kp = 0.3  #Best tuned params I have found are kp 0.13, ki 0.17, and kd 0.025
-        self.Ki = 0.01
+        self.Kp = 0.2  #Best tuned params I have found are kp 0.13, ki 0.17, and kd 0.025
+        self.Ki = 0.05
         self.Kd = 0.0
         """Members 
         """ 
