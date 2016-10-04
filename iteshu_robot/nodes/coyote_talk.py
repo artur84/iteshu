@@ -25,17 +25,17 @@ class WheelchairTalk:
         rospy.sleep(5)
         self.soundhandle.say("Hola", self.voice)
         rospy.sleep(2)
-        self.soundhandle.say("Mi nombre es robot coyote", self.voice)
+        self.soundhandle.say("Mi nombre es robot iteshu", self.voice)
         rospy.sleep(5)
         rospy.loginfo("Say a command...")
-
         # Subscribe to the recognizer output
         rospy.Subscriber('recognizer/output', String, self.rec_out_callback)
+       
         r = rospy.Rate(0.5)
         while not rospy.is_shutdown():
 #            rospy.loginfo("wheelchair talk is running correctly.")
             rospy.sleep(1)
-            if (time_since_last_sound >= 40):
+            if (time_since_last_sound >= 18):
                 self.soundhandle.stopAll()
                 rospy.sleep(1)
                 self.soundhandle.say("hola", self.voice)

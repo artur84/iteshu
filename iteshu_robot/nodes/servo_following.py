@@ -14,8 +14,10 @@ import tf
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import PoseStamped
 from std_msgs.msg import UInt16
+from std_msgs.msg import String
 from copy import deepcopy 
 import numpy as np
+from sound_play.libsoundplay import SoundClient
 
 class TrackedPerson():
     def __init__( self ):
@@ -158,7 +160,7 @@ class ServoFollowing():
     def __init__( self ):
         """ Constants
         """
-        
+        rospy.on_shutdown( self.cleanup )
         """Members 
         """ 
         self.servo = Servo()
@@ -166,11 +168,23 @@ class ServoFollowing():
         self.current_amount_of_users=0
         self.last_amount_of_users=0
         self.first_loop_flag=1
-        """ Publishers
+        """ Voice Synthesis
         """
- 
-        rospy.on_shutdown( self.cleanup )
-        
+        print "HEERE"
+        #voice_*_diphone, * = kal, el (spanish), rab (british)
+        self.voice = rospy.get_param("~voice", "voice_el_diphone")
+        self.soundhandle = SoundClient()
+        # Announce that we are ready for input
+        self.soundhandle.stopAll()
+        self.soundhandle.say("Hola", self.voice)
+        rospy.sleep(2)
+        self.soundhandle.say("Mi nombre es robot iteshu", self.voice)
+        rospy.sleep(5)
+        rospy.loginfo("Say a command...")
+        # Subscribe to the recognizer output
+        rospy.Subscriber('recognizer/output', String, self.rec_out_callback)
+        print "HAREFADF"
+
         self.cleanup()
         
         r = rospy.Rate( 10.0 )
@@ -182,13 +196,11 @@ class ServoFollowing():
             self.current_amount_of_users= len(self.user.available_list)
             ####Say hello when new user enters
             if self.current_amount_of_users>self.last_amount_of_users:
-                print "New user entered"
-                print "current users:"
-                print self.user.available_list
+                self.soundhandle.stopAll()
+                self.soundhandle.say("Hola", self.voice)
             elif self.current_amount_of_users <self.last_amount_of_users:
-                print "A user got out"
-                print "current users:"
-                print self.user.available_list
+                self.soundhandle.stopAll()
+                self.soundhandle.say("Adios", self.voice)
             else:
                 pass
             #### Track users only if there are more than 0
@@ -209,6 +221,18 @@ class ServoFollowing():
                 
             self.last_amount_of_users=deepcopy(self.current_amount_of_users)
             r.sleep()
+    
+    def rec_out_callback(self, msg):
+        # Print the recognized words on the screen
+        self.soundhandle.stopAll()
+        rospy.sleep(1)
+        self.current_command = msg.data
+        # Speak-out the recognized words.
+        try:  # If the command was recognized
+            self.soundhandle.say(self.current_command, self.voice)
+            rospy.sleep(1)
+        except:
+            self.soundhandle.say("No entiendo", self.voice)
      
         
     
