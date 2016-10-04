@@ -1,10 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python 
+#-*- coding: utf-8 -*-
 
 import roslib
 from wheelchairint._keywords_to_command import *
 import rospy
 from std_msgs.msg import String
 from sound_play.libsoundplay import SoundClient
+import unicodedata
 
 class WheelchairTalk:
     def __init__(self):
@@ -18,16 +20,16 @@ class WheelchairTalk:
         # Create the sound client object
         self.soundhandle = SoundClient()
         # Announce that we are ready for input
-        rospy.sleep(2)
-        self.soundhandle.stopAll()
-        rospy.sleep(1)
-        self.soundhandle.playWave(self.wavepath + "/R2D2.wav")
-        rospy.sleep(5)
-        self.soundhandle.say("Hola", self.voice)
-        rospy.sleep(2)
-        self.soundhandle.say("Mi nombre es robot iteshu", self.voice)
-        rospy.sleep(5)
-        rospy.loginfo("Say a command...")
+#         rospy.sleep(2)
+#         self.soundhandle.stopAll()
+#         rospy.sleep(1)
+#         self.soundhandle.playWave(self.wavepath + "/R2D2.wav")
+#         rospy.sleep(5)
+#         self.soundhandle.say("Hola", self.voice)
+#         rospy.sleep(2)
+#         self.soundhandle.say("Mi nombre es robot iteshu", self.voice)
+#         rospy.sleep(5)
+#         rospy.loginfo("Say a command...")
         # Subscribe to the recognizer output
         rospy.Subscriber('recognizer/output', String, self.rec_out_callback)
        
@@ -63,6 +65,7 @@ class WheelchairTalk:
         self.soundhandle.stopAll()
         rospy.sleep(1)
         self.current_command = msg.data
+        self.from_utf8_to_ascii()
         # Speak-out the recognized words.
         try:  # If the command was recognized
             self.soundhandle.say(self.current_command, self.voice)
@@ -70,7 +73,19 @@ class WheelchairTalk:
         except:
             self.soundhandle.say("No entiendo", self.voice)
 
-
+    def from_utf8_to_ascii(self):
+        """Use this function to be able to speak spanish"""
+        #unicode_str=self.current_command.encode('ascii','ignore')
+        s=self.current_command.decode('utf-8')
+        nfkd_form = unicodedata.normalize('NFKD', s)
+        only_ascii = nfkd_form.encode('ASCII', 'ignore')
+        self.current_command=only_ascii
+        
+        
+                
+                
+            
+        
     def cleanup(self):
         self.soundhandle.say("Adios", self.voice)
         rospy.sleep(4)
