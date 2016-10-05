@@ -47,7 +47,7 @@ class TrackedPerson():
         self.current_name = deepcopy(self.available_list[0]) #Takes the first user in the list
         #print self.current_name
         try:#Check if the desired tf is active
-            self.__listener.waitForTransform('openni_depth_frame', self.current_name,  rospy.Time.now(), rospy.Duration(0.05))
+            self.__listener.waitForTransform('openni_depth_frame', self.current_name,  rospy.Time.now(), rospy.Duration(0.03))
         except:
             self.current_angle_from_kinect=0
             return self.current_angle_from_kinect
@@ -71,7 +71,7 @@ class TrackedPerson():
             name = self.frame_root+str(n)
             if self.__listener.frameExists(name):
                 try:
-                    self.__listener.waitForTransform('openni_depth_frame', name,  rospy.Time.now(), rospy.Duration(1))
+                    self.__listener.waitForTransform('openni_depth_frame', name,  rospy.Time.now(), rospy.Duration(0.1))
                     self.available_list.append(name)
                 except:
                     continue
@@ -107,8 +107,8 @@ class Servo():
         self.p_error=0.0
         self.integral_error = 0.0
         self.derivative_error = 0.0
-        self.Kp = 0.2  #Best tuned params I have found are kp 0.13, ki 0.17, and kd 0.025
-        self.Ki = 0.05
+        self.Kp = 0.3  #Best tuned params I have found are kp 0.13, ki 0.17, and kd 0.025
+        self.Ki = 0.15
         self.Kd = 0.0
         """Members 
         """ 
@@ -138,7 +138,7 @@ class Servo():
         self.previous_p_error = self.p_error
         self.angle += self.pid_output
         
-        if self.angle >= 0 and self.angle <= 180:
+        if self.angle >= 1 and self.angle <= 179:
             self.ros_angle.data=self.angle
             #print self.angle
             self.angle_pub.publish(self.ros_angle)  
@@ -156,6 +156,13 @@ class Servo():
         self.angle=self.C_INIT_ANGLE
         self.cant_move_more_flag=0
         self.angle_pub.publish(self.ros_angle)
+        rospy.sleep(2)
+        
+    def loop_exists(self):
+        if self.current_angle_from_kinect == self.last_angle_from_kinect:
+            return True
+        else:
+            return False
         
         
 class ServoFollowing():
@@ -170,6 +177,10 @@ class ServoFollowing():
         self.current_amount_of_users=0
         self.last_amount_of_users=0
         self.first_loop_flag=1
+        self.welcome_messages=[ "Hola", "Hola Bienvenido", "No te muevas","no me dejes nunca", "Hola amigos", "ai ai ai ai ai", "Detente","me estas mareando", "Buenos dias", "Viva mejico", "Bienvenidos a iteshu", "Que onda", "Quedate quieto por favor"]
+        # Modo albanil
+        #self.welcome_messages=[ "Hola mi vida","Sabroossuuuraaa", "oh la la", "Apachurro", "Que comen los pajaritos", "A donde tan solita", "Ajuuua", "Si como lo mueves lo bates"]
+        self.welcome_message_number=0
         """ Voice Synthesis
         """
         self.current_voice_command=''
@@ -218,27 +229,32 @@ class ServoFollowing():
                 else:
                     try:  # If the command was recognized
                         self.soundhandle.stopAll()
-                        self.soundhandle.say('escuche'+self.current_voice_command, self.voice)
+                        self.soundhandle.say(self.current_voice_command, self.voice)
                         rospy.sleep(1)
                     except:
                         self.soundhandle.stopAll()
                         self.soundhandle.say("No entiendo", self.voice)
                 
             if get_list_counter==0:
-                get_list_counter=10
+                get_list_counter=5
                 self.user.get_available_list()
                 self.current_amount_of_users= len(self.user.available_list)
             ####Say hello when new user enters
             if self.current_amount_of_users>self.last_amount_of_users:
-                if (time_since_last_message >= 20):
+                if (time_since_last_message >= 5):
                     self.soundhandle.stopAll()
-                    self.soundhandle.say("Hola", self.voice)
                     time_since_last_message=0
-            elif self.current_amount_of_users <self.last_amount_of_users:
-                if (time_since_last_message >= 100):
+                    if self.welcome_message_number<len(self.welcome_messages):
+                        message=self.welcome_messages[self.welcome_message_number]
+                        self.soundhandle.say(message, self.voice)
+                        self.welcome_message_number+=1
+                    else:
+                        self.welcome_message_number=0
+            #elif self.current_amount_of_users <self.last_amount_of_users:
+            #    if (time_since_last_message >= 30):
                     #self.soundhandle.stopAll()
-                    self.soundhandle.say("Adios", self.voice)
-                    time_since_last_message=0
+            #        self.soundhandle.say("Adios", self.voice)
+            #        time_since_last_message=0
             else:
                 pass
             #### Track users only if there are more than 0
@@ -247,12 +263,7 @@ class ServoFollowing():
                     angle = self.user.get_angle_from_kinect()      
                 except:
                     continue
-                if self.first_loop_flag:
-                    self.servo.move_angle(0)
-                    self.first_loop_flag=0
-                else:
-                    pass
-                    self.servo.move_angle(angle)
+                self.servo.move_angle(angle)
             else:
                 pass
                 #print "There are no users"

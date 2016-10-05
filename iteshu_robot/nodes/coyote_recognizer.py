@@ -42,7 +42,7 @@ class GoogleRecognizer:
         FORMAT = pyaudio.paInt16
         CHANNELS = 1
         RATE = 16000
-        THRESHOLD = 70  #20 for bluetooth mic. The threshold intensity that defines silence signal (lower than).
+        THRESHOLD = 100 #20 for bluetooth mic. The threshold intensity that defines silence signal (lower than).
         SILENCE_LIMIT = 0.5  # Silence limit in seconds. The max amount of seconds where only silence is recorded. When this time passes the recording finishes and the file is delivered.
         
 
