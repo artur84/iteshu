@@ -11,6 +11,7 @@ import roslib
 import rospy
 import math
 import tf
+import unicodedata
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import PoseStamped
 from std_msgs.msg import UInt16
@@ -45,10 +46,11 @@ class TrackedPerson():
         """ Get the position (angle) of the tracked user with respect to the kinect """
         self.current_name = deepcopy(self.available_list[0]) #Takes the first user in the list
         #print self.current_name
-#         try:#Check if the desired tf is active
-#             self.__listener.waitForTransform('openni_depth_frame', self.current_name,  rospy.Time.now(), rospy.Duration(0.05))
-#         except:
-#             raise
+        try:#Check if the desired tf is active
+            self.__listener.waitForTransform('openni_depth_frame', self.current_name,  rospy.Time.now(), rospy.Duration(0.05))
+        except:
+            self.current_angle_from_kinect=0
+            return self.current_angle_from_kinect
         
         try:#Compute the desired tf
             now = rospy.Time(0)
@@ -65,11 +67,11 @@ class TrackedPerson():
         """ Gets the list of all available frames 
         """
         self.available_list=[]
-        for n in range(8):
+        for n in range(10):
             name = self.frame_root+str(n)
             if self.__listener.frameExists(name):
                 try:
-                    self.__listener.waitForTransform('openni_depth_frame', name,  rospy.Time.now(), rospy.Duration(0.05))
+                    self.__listener.waitForTransform('openni_depth_frame', name,  rospy.Time.now(), rospy.Duration(1))
                     self.available_list.append(name)
                 except:
                     continue
@@ -138,7 +140,7 @@ class Servo():
         
         if self.angle >= 0 and self.angle <= 180:
             self.ros_angle.data=self.angle
-            print self.angle
+            #print self.angle
             self.angle_pub.publish(self.ros_angle)  
         else:
             self.cant_move_more_flag=1
@@ -170,37 +172,73 @@ class ServoFollowing():
         self.first_loop_flag=1
         """ Voice Synthesis
         """
-        print "HEERE"
+        self.current_voice_command=''
+        self.voice_recived_flag=0
+        time_since_last_message=0
+        time_since_last_sound=0
         #voice_*_diphone, * = kal, el (spanish), rab (british)
         self.voice = rospy.get_param("~voice", "voice_el_diphone")
         self.soundhandle = SoundClient()
-        # Announce that we are ready for input
-        self.soundhandle.stopAll()
-        self.soundhandle.say("Hola", self.voice)
-        rospy.sleep(2)
-        self.soundhandle.say("Mi nombre es robot iteshu", self.voice)
-        rospy.sleep(5)
-        rospy.loginfo("Say a command...")
         # Subscribe to the recognizer output
         rospy.Subscriber('recognizer/output', String, self.rec_out_callback)
-        print "HAREFADF"
+        #print "HAREFADF"
 
         self.cleanup()
         
         r = rospy.Rate( 10.0 )
         list=[]
+        get_list_counter =0
         while not rospy.is_shutdown():
             #print self.user.current_name
             #print self.user.last_name
-            self.user.get_available_list()
-            self.current_amount_of_users= len(self.user.available_list)
+            if self.voice_recived_flag==1:
+                self.voice_recived_flag=0
+                # Speak-out the recognized words.
+                if self.current_voice_command.lower()=="presentate": #.lower() is to make case insensitive comparison
+                    self.soundhandle.stopAll()
+                    self.soundhandle.say("Mucho gusto", self.voice)
+                    rospy.sleep(2)
+                    self.soundhandle.say("Mi nombre es robot iteshu", self.voice)
+                elif self.current_voice_command.lower()=="como estas" or self.current_voice_command.lower()=="como esta":
+                    self.soundhandle.stopAll()
+                    self.soundhandle.say("muy bien", self.voice)
+                    rospy.sleep(2)
+                elif self.current_voice_command.lower()=="hola":
+                    self.soundhandle.stopAll()
+                    self.soundhandle.say("hola", self.voice)
+                    rospy.sleep(2)
+                elif self.current_voice_command.lower()=="adios":
+                    self.soundhandle.stopAll()
+                    self.soundhandle.say("adios", self.voice)
+                    rospy.sleep(2)
+                elif self.current_voice_command.lower()=="gracias":
+                    self.soundhandle.stopAll()
+                    self.soundhandle.say("de nada", self.voice)
+                    rospy.sleep(2)
+                else:
+                    try:  # If the command was recognized
+                        self.soundhandle.stopAll()
+                        self.soundhandle.say('escuche'+self.current_voice_command, self.voice)
+                        rospy.sleep(1)
+                    except:
+                        self.soundhandle.stopAll()
+                        self.soundhandle.say("No entiendo", self.voice)
+                
+            if get_list_counter==0:
+                get_list_counter=10
+                self.user.get_available_list()
+                self.current_amount_of_users= len(self.user.available_list)
             ####Say hello when new user enters
             if self.current_amount_of_users>self.last_amount_of_users:
-                self.soundhandle.stopAll()
-                self.soundhandle.say("Hola", self.voice)
+                if (time_since_last_message >= 20):
+                    self.soundhandle.stopAll()
+                    self.soundhandle.say("Hola", self.voice)
+                    time_since_last_message=0
             elif self.current_amount_of_users <self.last_amount_of_users:
-                self.soundhandle.stopAll()
-                self.soundhandle.say("Adios", self.voice)
+                if (time_since_last_message >= 100):
+                    #self.soundhandle.stopAll()
+                    self.soundhandle.say("Adios", self.voice)
+                    time_since_last_message=0
             else:
                 pass
             #### Track users only if there are more than 0
@@ -218,7 +256,8 @@ class ServoFollowing():
             else:
                 pass
                 #print "There are no users"
-                
+            get_list_counter-=1
+            time_since_last_message+=1   
             self.last_amount_of_users=deepcopy(self.current_amount_of_users)
             r.sleep()
     
@@ -226,13 +265,17 @@ class ServoFollowing():
         # Print the recognized words on the screen
         self.soundhandle.stopAll()
         rospy.sleep(1)
-        self.current_command = msg.data
-        # Speak-out the recognized words.
-        try:  # If the command was recognized
-            self.soundhandle.say(self.current_command, self.voice)
-            rospy.sleep(1)
-        except:
-            self.soundhandle.say("No entiendo", self.voice)
+        self.current_voice_command = msg.data
+        self.from_utf8_to_ascii()
+        self.voice_recived_flag=1
+        
+    def from_utf8_to_ascii(self):
+        """Use this function to be able to speak spanish"""
+        #unicode_str=self.current_command.encode('ascii','ignore')
+        s=self.current_voice_command.decode('utf-8')
+        nfkd_form = unicodedata.normalize('NFKD', s)
+        only_ascii = nfkd_form.encode('ASCII', 'ignore')
+        self.current_voice_command=only_ascii
      
         
     

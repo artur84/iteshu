@@ -8,17 +8,18 @@ start_openni_launch  previously from external command line
 <launch>
 	<arg name="port" default="/dev/ttyACM0" /> 
 	
-	<node pkg="openni_tracker" type="openni_tracker" name="openni_tracker" />
+	<node pkg="sound_play" type="soundplay_node.py" name="sound_play"/>
+	<node pkg="iteshu_robot" type="coyote_recognizer.py" name="coyote_recognizer"/>
 	
 	<node pkg="rosserial_python" type="serial_node.py" name="rosserial"> 
 	    <param name="port" value="$(arg port)" /> 
 	</node>
 	
-	<node pkg="sound_play" type="soundplay_node.py" name="coyote_play_voice" output="screen"/>
 	<!-- A transformation to link openni_launch frames with tracker frames -->
 	<node pkg="tf" type="static_transform_publisher" name="kinect_camera_to_tracker" args="0 0 0 0 0 0 camera_link openni_depth_frame 50" />  
 	
 	<node pkg="iteshu_robot" type="servo_following.py" name="servo_following" output="screen"/>
 	<node pkg="rviz" type="rviz" name="rviz"/>
 
+	<node pkg="openni_tracker" type="openni_tracker" name="openni_tracker" />
 </launch>

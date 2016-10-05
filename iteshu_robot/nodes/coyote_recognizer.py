@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python 
+#-*- coding: utf-8 -*-
 import roslib
 import pyaudio
 import wave
@@ -29,11 +30,14 @@ class GoogleRecognizer:
         
         """You can get your own google key as explained here: 
         https://developers.google.com/youtube/registering_an_application"""
-        self.GOOGLE_KEY = 'AIzaSyAnGnFzW77_jdE-SwilZBQvAVdYkBcilPs'
+        self.GOOGLE_KEY = 'AIzaSyBj-q9gPnBdvTbVLndF7YL-2jDx76wSW9k'
+        # AIzaSyAnGnFzW77_jdE-SwilZBQvAVdYkBcilPs
+        # AIzaSyBj-q9gPnBdvTbVLndF7YL-2jDx76wSW9k
+        # AIzaSyBGi56QfVDvkaEwPCf1hcW-zeQENmA352Q
         ## @var self.FLAC_CONV
         self.FLAC_CONV = 'flac -f '
         # This is a WAV to FLAC converter. In linux you can use synaptic to install the flac package.
-        self.LANG_CODE ='en-US'  # es-Latn,en-US, es-me
+        self.LANG_CODE ='es-me'  # es-Latn,en-US, es-me
         chunk = 256
         FORMAT = pyaudio.paInt16
         CHANNELS = 1
