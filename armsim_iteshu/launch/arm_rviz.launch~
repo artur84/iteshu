@@ -10,6 +10,6 @@
  
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
  
-  <node name="rviz" pkg="rviz" type="rviz" args="-d sim_voice_cmd.rviz" />
+  <node name="rviz" pkg="rviz" type="rviz" args="-d arm_iteshu.rviz" />
  
 </launch>

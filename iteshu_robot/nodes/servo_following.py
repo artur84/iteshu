@@ -107,7 +107,8 @@ class Servo():
         self.p_error=0.0
         self.integral_error = 0.0
         self.derivative_error = 0.0
-        self.Kp = 0.3  #Best tuned params I have found are kp 0.13, ki 0.17, and kd 0.025
+        #Gains for the pid cntroller
+        self.Kp = 0.3  
         self.Ki = 0.15
         self.Kd = 0.0
         """Members 
@@ -177,7 +178,7 @@ class ServoFollowing():
         self.current_amount_of_users=0
         self.last_amount_of_users=0
         self.first_loop_flag=1
-        self.welcome_messages=[ "Hola", "Hola Bienvenido", "No te muevas","no me dejes nunca", "Hola amigos", "ai ai ai ai ai", "Detente","me estas mareando", "Buenos dias", "Viva mejico", "Bienvenidos a iteshu", "Que onda", "Quedate quieto por favor"]
+        self.welcome_messages=[ "Hola", "Hola Bienvenido", "Hola padres de familia", "Habia una vez un perro", "Que se llamaba pegamento", "Una vez se cayo y se pego","ji ji ji ji", "Buenas tardes padres de meca", "Bienvenidos a iteshu"]
         # Modo albanil
         #self.welcome_messages=[ "Hola mi vida","Sabroossuuuraaa", "oh la la", "Apachurro", "Que comen los pajaritos", "A donde tan solita", "Ajuuua", "Si como lo mueves lo bates"]
         self.welcome_message_number=0

@@ -8,7 +8,6 @@ from collections import deque
 import os
 import urllib2
 import time
-
 import rospy
 import math
 from std_msgs.msg import String
@@ -45,11 +44,9 @@ class GoogleRecognizer:
         THRESHOLD = 100 #20 for bluetooth mic. The threshold intensity that defines silence signal (lower than).
         SILENCE_LIMIT = 0.5  # Silence limit in seconds. The max amount of seconds where only silence is recorded. When this time passes the recording finishes and the file is delivered.
         
-
         self.p = pyaudio.PyAudio()
         ## @var p
         # The python audio class.
-
         self.stream = self.p.open(format=FORMAT,channels=CHANNELS,
                         rate=RATE,input=True,frames_per_buffer=chunk)
         ## @var stream
@@ -68,14 +65,10 @@ class GoogleRecognizer:
         self.rec_out = String()
         ## @var rec_out
         #  The recognized vocal command to be published as a ROS String().
-
-
-
         r = rospy.Rate(10.0)
         while not rospy.is_shutdown():
             self.data = self.stream.read(chunk)
             self.slid_win.append (abs(audioop.avg(self.data, 2)))
-
             if(True in [ x > THRESHOLD for x in self.slid_win]):
                 if(not self.started):
                     print "starting record"
