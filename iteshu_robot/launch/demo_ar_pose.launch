@@ -1,0 +1,22 @@
+<!-- This launch file is used to run the ar_pose demo -->
+<launch>
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find iteshu_robot)/conf/rviz/live_multi.rviz"/>
+  
+  
+  <node pkg="tf" type="static_transform_publisher" name="world_to_cam" 
+    args="0 0 0.5 -1.57 0 -1.57 world camera 1" />
+
+  <node ns="camera" pkg="image_proc" type="image_proc" name="image_proc"/>
+
+  <node ns="camera" pkg="uvc_camera" type="uvc_camera_node" name="uvc_camera"
+    output="screen"/>
+
+
+  <node name="ar_pose" pkg="ar_pose" type="ar_multi" respawn="false"
+    output="screen">
+    <param name="marker_pattern_list" type="string"
+      value="$(find ar_pose)/data/object_4x4"/>
+    <param name="threshold" type="int" value="100"/>
+  </node>
+
+</launch>

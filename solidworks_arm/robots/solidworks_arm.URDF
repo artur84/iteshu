@@ -1,0 +1,221 @@
+<!-- Robot -->
+<robot
+  name="solidworks_arm">
+  <link
+    name="base_link">
+    <inertial>
+      <origin
+        xyz="-2.94902990916057E-17 -6.24500451351651E-17 0.181672030786973"
+        rpy="0 0 0" />
+      <mass
+        value="0.0450462948917676" />
+      <inertia
+        ixx="3.73760183746963E-05"
+        ixy="0"
+        ixz="2.74613028693319E-22"
+        iyy="3.73760183746963E-05"
+        iyz="8.66790972367195E-22"
+        izz="7.33038758972795E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://solidworks_arm/meshes/base_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0 0 1 0.5" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://solidworks_arm/meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link
+    name="link1">
+    <inertial>
+      <origin
+        xyz="0.110757508882432 -8.47840200823846E-12 8.47844537632536E-12"
+        rpy="0 0 0" />
+      <mass
+        value="0.0483304115687852" />
+      <inertia
+        ixx="3.07104106331661E-05"
+        ixy="1.07079537176511E-14"
+        ixz="7.54141214012132E-15"
+        iyy="0.000113061736454189"
+        iyz="-6.58321191851009E-11"
+        izz="0.000106106600538171" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://solidworks_arm/meshes/link1.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://solidworks_arm/meshes/link1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="joint1"
+    type="continuous">
+    <origin
+      xyz="0 0 0.19925"
+      rpy="0 1.5708 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="link1" />
+    <!--axis
+      xyz="0.67209 0.74047 0" /-->
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+    <calibration
+      rising="0"
+      falling="0" />
+    <dynamics
+      damping="0"
+      friction="0" />
+    <safety_controller
+      soft_upper="0"
+      soft_lower="0"
+      k_position="0"
+      k_velocity="0" />
+  </joint>
+  <link
+    name="link2">
+    <inertial>
+      <origin
+        xyz="0.0943410777393742 3.62997296492196E-08 -8.71315915612625E-07"
+        rpy="0 0 0" />
+      <mass
+        value="0.0585766241134677" />
+      <inertia
+        ixx="3.84276675879977E-05"
+        ixy="1.40403654767025E-09"
+        ixz="-1.32150364620235E-09"
+        iyy="0.000189618558104886"
+        iyz="6.29511422408353E-09"
+        izz="0.00018961504010832" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://solidworks_arm/meshes/link2.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://solidworks_arm/meshes/link2.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="joint2"
+    type="revolute">
+    <origin
+      xyz="0.181766743813069 0 0"
+      rpy="-1.5707963267949 4.9960036108132E-16 -0.737021408016504" />
+    <parent
+      link="link1" />
+    <child
+      link="link2" />
+    <axis
+      xyz="0 -1 0" />
+    <limit effort="30" velocity="1.0" lower="-2.2" upper="0.7" />
+  </joint>
+  <link
+    name="link3">
+    <inertial>
+      <origin
+        xyz="0.0943408937132365 -1.45321293332223E-08 -7.32845611972621E-09"
+        rpy="0 0 0" />
+      <mass
+        value="0.0585762218197753" />
+      <inertia
+        ixx="3.84277322324291E-05"
+        ixy="2.03132266267289E-11"
+        ixz="-4.31636297499163E-12"
+        iyy="0.000189616393272144"
+        iyz="-1.16063851251743E-10"
+        izz="0.000189615963649806" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://solidworks_arm/meshes/link3.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://solidworks_arm/meshes/link3.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="joint3"
+    type="revolute">
+    <origin
+      xyz="0.18176674381307 0 0"
+      rpy="-1.5707963267949 -4.30211422042248E-16 -1.25226854325902" />
+    <parent
+      link="link2" />
+    <child
+      link="link3" />
+    <axis
+      xyz="0 -1 0" />
+    <limit effort="30" velocity="1.0" lower="-2.2" upper="0.7" />
+  </joint>
+</robot>
