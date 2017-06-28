@@ -4,8 +4,6 @@ recognizer understands for feedback purposes-->
 
 <launch>
 	<node pkg="sound_play" type="soundplay_node.py" name="coyote_play_voice" output="screen"/>
-    <!--node pkg="iteshu_robot" type="coyote_talk.py" name="coyote_talk" output="screen"-->
-    	<!--param name="voice" value="voice_el_diphone"/--><!-- voice_*_diphone, * = kal, el (spanish), rab (british) -->
-        <!--param name="wavepath" value="$(find wheelchairint)/sounds"/-->
-   	<!--/node-->
+    <node pkg="iteshu_robot" type="coyote_talk.py" name="coyote_talk" output="screen"/>
+    	
 </launch>

@@ -14,6 +14,9 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   tf
+  amcl
+  map_server
+  openni_launch
 )
 
 ## System dependencies are found with CMake's conventions
