@@ -1,0 +1,10 @@
+<!-- Starts the openni tracker with a useful static transformation that links the frames produced by openni.launch with those produced by openni_tracker node -->
+<!-- Before using this launch file please start openni.launch 
+     $  roslaunch openni_launch openni.launch
+-->
+
+<launch>
+   <include file="$(find openni_launch)/launch/openni.launch"/>
+   <node pkg="openni_tracker" type="openni_tracker" name="openni_tracker" output="screen"/>
+   <node pkg="tf" type="static_transform_publisher" name="openni_to_camera" args="0 0 0 0 0 0 camera_depth_frame   openni_depth_frame 100"/>
+</launch>
