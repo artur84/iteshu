@@ -137,7 +137,10 @@ void publishTransforms(const std::string& frame_id) {
 int main(int argc, char **argv) {
     ros::init(argc, argv, "openni_tracker");
     ros::NodeHandle nh;
-
+    ROS_INFO("openni_tracker will wait for 10 seconds so that roslaunch can get ready!!!");
+    ros::Duration(10).sleep(); // sleep for ten seconds to give roslaunch enough time to start
+    ROS_INFO("openni_tracker will init now");
+ 
     string configFilename = ros::package::getPath("openni_tracker") + "/openni_tracker.xml";
     XnStatus nRetVal = g_Context.InitFromXmlFile(configFilename.c_str());
     CHECK_RC(nRetVal, "InitFromXml");
@@ -189,7 +192,7 @@ int main(int argc, char **argv) {
         ros::NodeHandle pnh("~");
         string frame_id("openni_depth_frame");
         pnh.getParam("camera_frame_id", frame_id);
-                
+    ROS_INFO("openni_tracker ready please make a PSI form to be tracked");          
 	while (ros::ok()) {
 		g_Context.WaitAndUpdateAll();
 		publishTransforms(frame_id);
