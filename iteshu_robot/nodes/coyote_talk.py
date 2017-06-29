@@ -2,7 +2,7 @@
 #-*- coding: utf-8 -*-
 
 import roslib
-from wheelchairint._keywords_to_command import *
+from iteshu_robot._keywords_to_command import *
 import rospy
 from std_msgs.msg import String
 from sound_play.libsoundplay import SoundClient
@@ -15,19 +15,19 @@ class WheelchairTalk:
         time_since_last_sound=0
         #voice_*_diphone, * = kal, el (spanish), rab (british)
         self.voice = rospy.get_param("~voice", "voice_el_diphone")
-        self.wavepath = rospy.get_param("~wavepath", "")
+        self.wavepath = rospy.get_param("~wavepath", "/home/beny/catkin_ws/src/iteshu/iteshu_robot/sounds")
         self.command_to_phrase = COMMAND_TO_PHRASE  # this is deffined in wheelchairint/keywords_tocommand.py
         # Create the sound client object
         self.soundhandle = SoundClient()
         # Announce that we are ready for input
-#         rospy.sleep(2)
-#         self.soundhandle.stopAll()
-#         rospy.sleep(1)
-#         self.soundhandle.playWave(self.wavepath + "/R2D2.wav")
-#         rospy.sleep(5)
-#         self.soundhandle.say("Hola", self.voice)
-#         rospy.sleep(2)
-#         self.soundhandle.say("Mi nombre es robot iteshu", self.voice)
+        rospy.sleep(2)
+        self.soundhandle.stopAll()
+        rospy.sleep(1)
+        self.soundhandle.playWave(self.wavepath + "/R2D2.wav")
+        rospy.sleep(5)
+        self.soundhandle.say("Hola", self.voice)
+        rospy.sleep(2)
+        self.soundhandle.say("Mi nombre es robot iteshu", self.voice)
 #         rospy.sleep(5)
 #         rospy.loginfo("Say a command...")
         # Subscribe to the recognizer output
@@ -51,7 +51,7 @@ class WheelchairTalk:
                 self.soundhandle.say("Buenas tardes", self.voice)
                 rospy.sleep(2)
                 self.soundhandle.say("Bienvenidos", self.voice)
-                rospy.sleep(3)
+                rospy.sleep(2)
                 self.soundhandle.say("Los puedo seguir", self.voice)
                 rospy.sleep(5)
                 time_since_last_message=0
