@@ -1,8 +1,0 @@
-prefix=/home/arturo/catkin_ws/install
-
-Name: iteshu_robot
-Description: Description of iteshu_robot
-Version: 0.0.0
-Cflags: 
-Libs: -L/home/arturo/catkin_ws/install/lib 
-Requires: 
