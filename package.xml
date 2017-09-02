@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package>
+  <name>iteshu</name>
+  <version>0.0.0</version>
+  <description>The iteshu meta_package</description>
+  <maintainer email="artur@todo.todo">artur</maintainer>
+  <license>TODO</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <run_depend>iteshu_robot</run_depend>
+  <run_depend>rc_gazebo_worlds</run_depend>
+  <run_depend>learning_tf</run_depend>
+  <run_depend>openni_tracker</run_depend>
+  <run_depend>solidworks_arm</run_depend>
+
+  <!-- The export tag contains other, unspecified, tags -->
+ <export>
+   <metapackage />
+ </export>
+</package>
